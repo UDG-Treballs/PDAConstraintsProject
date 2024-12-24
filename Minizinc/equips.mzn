@@ -19,11 +19,11 @@ array[1..nstadiums] of int : capacitats;
 % -------------------------------------------------------------------------------------------------------------
 array[1..nteams,1..nteams] of var tuple(1..ndays, 1..nstadiums): teamVsTeam;
 var int: seguidorsFora;
-%array[1..ndays, 1..nstadiums] of var set of 1..nteams: resultat;
 array[1..nteams] of var int: minKilometres;
+%array[1..ndays, 1..nstadiums] of var set of 1..nteams: resultat;
 
 
-constraint forall(i in 2..nteams) (
+constraint forall(i in 1..nteams) (
     all_different([teamVsTeam[i, j].1 | j in 1..(i-1)]++
                   [teamVsTeam[j, i].1 | j in i+1..nteams])
                   /\
@@ -37,8 +37,8 @@ constraint forall(d in 1..ndays, s in 1..nstadiums)(
 
 constraint forall(d in 1..ndays, s in 1..nstadiums)(
      if card(fixes[d,s])>1 then teamVsTeam[max(fixes[d,s]),min(fixes[d,s])].1==d /\ teamVsTeam[max(fixes[d,s]),min(fixes[d,s])].2==s
-     elseif card(fixes[d,s])==1 then exists( vs in [teamVsTeam[i,fixes[d,s][1]] | i in fixes[d,s][1]+1..nteams])(vs.1==d /\ vs.2==s) \/
-                                     exists( vs in [teamVsTeam[fixes[d,s][1],i] | i in 1..(fixes[d,s][1]-1)])(vs.1==d /\ vs.2==s)
+     elseif card(fixes[d,s])==1 then exists( vs in [teamVsTeam[i,fixes[d,s][1]] | i in fixes[d,s][1]+1..nteams]++
+                                                   [teamVsTeam[fixes[d,s][1],i] | i in 1..(fixes[d,s][1]-1)])(vs.1==d /\ vs.2==s)
      else
       true
      endif
@@ -49,25 +49,27 @@ constraint seguidorsFora =
   sum(e1 in 1..nteams-1, e2 in e1+1..nteams)(
     abs(max(tifosi[e1] + tifosi[e2] - capacitats[teamVsTeam[e2, e1].2],0))
 );
+
 constraint forall(e in 1..nteams)(
   minKilometres[e] = sum(d in 2..ndays)(
                         let {
                           var 1..nstadiums: d1_estadium;
                           var 1..nstadiums: d2_estadium;
-                          constraint exists(d1, d2 in ([teamVsTeam[e, j] | j in 1..(e-1)] ++ [teamVsTeam[j, e] | j in e+1..nteams])) (
-                          d1.1 == (d - 1) /\ d1.2 == d1_estadium /\ d2.1 == d /\ d2.2 == d2_estadium)
+                          constraint exists(e2d1 in 1..nteams, e2d2 in 1..nteams) (
+                           teamVsTeam[max(e, e2d1),min(e, e2d1)].1==(d-1) /\ teamVsTeam[max(e, e2d2),min(e, e2d2)].1==d /\ 
+                           teamVsTeam[max(e, e2d1),min(e, e2d1)].2==d1_estadium /\ teamVsTeam[max(e, e2d2),min(e, e2d2)].2==d2_estadium /\ 
+                           e!=e2d1 /\ e!=e2d2)
                         } in
                         distancies[d1_estadium, d2_estadium])
                      );
-
 
 % Constraint to populate resultat based on teamVsTeam
 /*constraint forall(i in 1..nteams-1, j in i+1..nteams)(
     resultat[teamVsTeam[j, i].1, teamVsTeam[j, i].2] = {i, j}
 );*/
 
-
 solve minimize(seguidorsFora);
+
 
 output["\t|"] ++  [
  "Team " ++ show(i) ++ "\t" ++ if i != nteams then "" else "|\n" endif |i in 1..nteams
