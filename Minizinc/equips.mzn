@@ -32,9 +32,10 @@ constraint forall(i in 1..nteams) (
 );
 
 constraint forall(d in 1..ndays, s in 1..nstadiums)(
-    card({i | i in 1..nteams-1, j in i+1..nteams where teamVsTeam[j, i].1 == d /\ teamVsTeam[j, i].2 == s})<=1
+    sum(i in 1..nteams-1, j in i+1..nteams) (
+        bool2int(teamVsTeam[j, i].1 == d /\ teamVsTeam[j, i].2 == s)
+    ) <= 1
 );
-
 constraint forall(d in 1..ndays, s in 1..nstadiums)(
      if card(fixes[d,s])>1 then teamVsTeam[max(fixes[d,s]),min(fixes[d,s])].1==d /\ teamVsTeam[max(fixes[d,s]),min(fixes[d,s])].2==s
      elseif card(fixes[d,s])==1 then exists( vs in [teamVsTeam[i,fixes[d,s][1]] | i in fixes[d,s][1]+1..nteams]++
