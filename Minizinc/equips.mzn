@@ -20,17 +20,16 @@ array[1..nstadiums] of int : capacitats;
 array[1..nteams,1..nteams] of var tuple(1..ndays, 1..nstadiums): teamVsTeam;
 var int: seguidorsFora;
 %array[1..ndays, 1..nstadiums] of var set of 1..nteams: resultat;
+array[1..nteams] of var int: minKilometres;
 
-%array[1..ndays,1..nstadiums] of var 0..nteams: availability;
+
 constraint forall(i in 2..nteams) (
     all_different([teamVsTeam[i, j].1 | j in 1..(i-1)]++
                   [teamVsTeam[j, i].1 | j in i+1..nteams])
-);
-constraint forall(i in 2..nteams) (
+                  /\
     all_different([teamVsTeam[i, j].2 | j in 1..(i-1)]++
-                  [teamVsTeam[j, i].2 | j in i+1..nteams])
+    [teamVsTeam[j, i].2 | j in i+1..nteams])
 );
-
 
 constraint forall(d in 1..ndays, s in 1..nstadiums)(
     card({i | i in 1..nteams-1, j in i+1..nteams where teamVsTeam[j, i].1 == d /\ teamVsTeam[j, i].2 == s})<=1
@@ -50,14 +49,42 @@ constraint seguidorsFora =
   sum(e1 in 1..nteams-1, e2 in e1+1..nteams)(
     abs(max(tifosi[e1] + tifosi[e2] - capacitats[teamVsTeam[e2, e1].2],0))
 );
+constraint forall(e in 1..nteams)(
+  minKilometres[e] = sum(d in 2..ndays)(
+                        let {
+                          var 1..nstadiums: d1_estadium;
+                          var 1..nstadiums: d2_estadium;
+                          constraint exists(d1, d2 in ([teamVsTeam[e, j] | j in 1..(e-1)] ++ [teamVsTeam[j, e] | j in e+1..nteams])) (
+                          d1.1 == (d - 1) /\ d1.2 == d1_estadium /\ d2.1 == d /\ d2.2 == d2_estadium)
+                        } in
+                        distancies[d1_estadium, d2_estadium])
+                     );
 
 
-
-/*% Constraint to populate resultat based on teamVsTeam
-constraint forall(i in 1..nteams-1, j in i+1..nteams)(
+% Constraint to populate resultat based on teamVsTeam
+/*constraint forall(i in 1..nteams-1, j in i+1..nteams)(
     resultat[teamVsTeam[j, i].1, teamVsTeam[j, i].2] = {i, j}
 );*/
 
 
 solve minimize(seguidorsFora);
 
+output["\t|"] ++  [
+ "Team " ++ show(i) ++ "\t" ++ if i != nteams then "" else "|\n" endif |i in 1..nteams
+] ++ ["---------"
+] ++ [
+ "--------"++if i != nteams then "" else "\n" endif |i in 1..nteams
+] ++  [
+ if j == 1 then "Team " ++ show(i) ++ "\t" else "" endif ++
+ if i < j then "d" ++ show(teamVsTeam[j, i].1) ++ " e" ++ show(teamVsTeam[j,i].2) ++ "\t" 
+ elseif i == j then "-----\t" 
+ else "d" ++ show(teamVsTeam[i, j].1) ++ " e" ++ show(teamVsTeam[i,j].2) ++ "\t" endif ++
+ if j == nteams then "|\n" else "" endif| 
+ i in 1..nteams, j in 1..nteams
+] ++ ["---------"
+] ++ [
+ "--------"++if i != nteams then "" else "\n" endif |i in 1..nteams
+] ++ [
+ "\nKMs TOTALS: \(sum(minKilometres)) \n",
+ "SEGUIDORS FORA: \(seguidorsFora)"
+];
