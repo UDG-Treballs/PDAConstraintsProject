@@ -18,7 +18,7 @@ array[1..nstadiums] of int : capacitats;
 % La diagonal és buida (com la meva ànima).
 % -------------------------------------------------------------------------------------------------------------
 array[1..nteams,1..nteams] of var tuple(1..ndays, 1..nstadiums): teamVsTeam;
-var int: seguidorsFora;
+var ((max(0,sum(tifosi)-sum(capacitats))-1)..((sum(tifosi)*(nteams)))): seguidorsFora;
 array[1..nteams] of var min([distancies[i, j]*nstadiums | i in 1..nstadiums, j in i..nstadiums where distancies[i, j] > 0])..max([distancies[i, j]*nstadiums | i in 1..nstadiums, j in i..nstadiums where distancies[i, j] > 0]): minKilometres;
 
 
