@@ -401,7 +401,7 @@ class ScalAT(problemName: String = "", workingpath: String = "working/") {
 
   private def runSAT4Jembedded = {
     val solver: ISolver = SolverFactory.newDefault
-    solver.setTimeout(3600) // 1 hour timeout
+    solver.setTimeout(360) // 10 minutes timeout
     val reader = new DimacsReader(solver)
     // CNF filename is given on the command line
     val problem: IProblem = reader.parseInstance(tmp_dimacs)

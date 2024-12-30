@@ -11,16 +11,16 @@ object Minesweeper extends App {
   val e = new ScalAT("Minesweeper")
 
   // Pàgina per obtenir més buscamines -_- : https://www.janko.at/Raetsel/Minesweeper/index.htm
-  // En el cas que hi hagi el nombre de mínes, s'indica a la part superior
+  // En el cas que hi hagi el nombre de mínes, s'indica a la part superior.
 
   // Read Values
-  val source = scala.io.Source.fromFile("testingFiles/Minesweeper/nr90")
+  val source = scala.io.Source.fromFile("testingFiles/Minesweeper/sambada.txt")
   val lines = source.getLines().toList
   source.close()
 
   //Given values
   val Array(n, m, mines) = lines.head.split(" ").map(_.toInt)
-  val entranceGrid = lines.tail.map(_.split(" "))
+  val values = lines.tail.map(_.split(" "))
 
   //Auxiliar variable
   var emptyPositions: Array[Int] = Array()
@@ -31,14 +31,22 @@ object Minesweeper extends App {
   //Constrains
   // 1: For each position fo the grid, we look for those who have values and those who don't
   for(i <- 0 until n; j <- 0 until m){
-    val tile = entranceGrid(i)(j)
+    val tile = values(i)(j)
     if(tile != "-"){
       //If the position has a value, there is no way a mine could be there
       e.addClause(-grid(i)(j) :: List())
-      //We get the K neighbors of the tile grid(i)(j)
-      val neighbors = getNeighbors(grid,i,j)
-      //We know K mines have to be in those neighbors
-      e.addEK(neighbors,tile.toInt)
+      if(tile != "X"){
+        //We get the K neighbors of the tile grid(i)(j)
+        val neighbors = getNeighbors(grid,i,j)
+        if (tile == "1"){
+          //We know 1 mine is in those neighbors
+          e.addEOLog(neighbors)
+        }
+        else {
+          //We know K mines are in those neighbors
+          e.addEK(neighbors,tile.toInt)
+        }
+      }
     }
     //In case no value is in the tile, we store that position
     else emptyPositions = emptyPositions :+ grid(i)(j)
