@@ -55,10 +55,18 @@ constraint forall(e in 1..nteams)(
                         } in
                         distancies[d1_estadium, d2_estadium])
                      );
+%Minimitzem els seguidors que es queden fora
+%solve minimize(seguidorsFora);
 
-solve minimize(sum(minKilometres) + seguidorsFora);
+%Minimi els kilometres que faran els seguidors
+solve minimize(sum(minKilometres));
+%solve minimize(sum(minKilometres)+3*(max(minKilometres) - min(minKilometres)));
 
+%Minimitzem tant els kilometres que faran els seguidors com els seguidors que es queden fora
+%solve minimize(sum(minKilometres)+seguidorsFora);
 
+% Aquesta seria l'opció per equilibrar el nombre de quilòmetres fets per cada equip tenint en compte el nombre de quilòmetres totals, el nombre de seguidors que es queden fora
+% solve minimize(sum(minKilometres) + seguidorsFora + (3*(max(minKilometres) - min(minKilometres))));
 output["\t|"] ++  [
  "Team " ++ show(i) ++ "\t" ++ if i != nteams then "" else "|\n" endif |i in 1..nteams
 ] ++ ["---------"
