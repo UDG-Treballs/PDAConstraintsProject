@@ -264,9 +264,37 @@ class ScalAT(problemName: String = "", workingpath: String = "working/") {
 
   //Adds the encoding of an exactly-K constraint.
   // x can be empty, and K take any value from -infinity to infinity
-    def addEK(x: List[Int], K: Int): Unit = {
-      addAMK(x, K)
-      addALK(x, K)
+  def addEK(x: List[Int], K: Int): Unit = {
+    if(K < 0){
+      addClause(List())
+    }
+    else if(K == 0){
+      for(lit <- x){
+        addClause(-lit :: List())
+      }
+    }
+    else if(x.size == K){
+      for(lit <- x){
+        addClause(lit :: List())
+      }
+    }
+    else if(x.size < K){
+      addClause(List())
+    }
+    else{
+      val sortedLiterals = newVarArray(x.size).toList
+      addSorter(x, sortedLiterals)
+
+      val selectedLiterals = sortedLiterals.take(K)
+      for(lit <- selectedLiterals){
+        addClause(lit :: List())  // We ensure the first literals are true.
+      }
+
+      val remainingLiterals = sortedLiterals.drop(K)
+      for (lit <- remainingLiterals) {
+        addClause(-lit :: List()) // We ensure the last literals are false.
+      }
+    }
   }
 
   //Adds the encoding of an at-least-K constraint.
@@ -274,6 +302,11 @@ class ScalAT(problemName: String = "", workingpath: String = "working/") {
   def addALK(x: List[Int], K: Int): Unit = {
     if(K <= 0){
       // No need to do anything
+    }
+    else if(x.size == K){
+      for(lit <- x){
+        addClause(lit :: List())
+      }
     }
     else if(x.size < K){
       addClause(List())

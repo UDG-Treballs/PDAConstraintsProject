@@ -14,7 +14,7 @@ object Minesweeper extends App {
   // En el cas que hi hagi el nombre de mínes, s'indica a la part superior.
 
   // Read Values
-  val source = scala.io.Source.fromFile("testingFiles/Minesweeper/sambada.txt")
+  val source = scala.io.Source.fromFile("testingFiles/Minesweeper/gran.txt")
   val lines = source.getLines().toList
   source.close()
 
