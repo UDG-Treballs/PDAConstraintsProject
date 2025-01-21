@@ -31,9 +31,15 @@ constraint forall(i in 1..nteams) (
 );
 
 constraint forall(d in 1..ndays, s in 1..nstadiums)(
+    sum(e1 in 1..nteams, e2 in e1+1..nteams)(
+        bool2int(teamVsTeam[e2, e1].1 == d /\ teamVsTeam[e2, e1].2 == s)
+    ) <= 1
+);
+
+constraint forall(d in 1..ndays, s in 1..nstadiums)(
      if card(fixes[d,s])>1 then teamVsTeam[max(fixes[d,s]),min(fixes[d,s])].1==d /\ teamVsTeam[max(fixes[d,s]),min(fixes[d,s])].2==s
      elseif card(fixes[d,s])==1 then exists( vs in [teamVsTeam[i,fixes[d,s][1]] | i in fixes[d,s][1]+1..nteams]++
-			                                             [teamVsTeam[fixes[d,s][1],i] | i in 1..(fixes[d,s][1]-1)])(vs.1==d /\ vs.2==s) 
+                                             [teamVsTeam[fixes[d,s][1],i] | i in 1..(fixes[d,s][1]-1)])(vs.1==d /\ vs.2==s) 
      else
       true
      endif
@@ -44,22 +50,22 @@ constraint seguidorsFora =
   sum(e1 in 1..nteams-1, e2 in e1+1..nteams)(
     abs(max(tifosi[e1] + tifosi[e2] - capacitats[teamVsTeam[e2, e1].2],0))
 );
-
 constraint forall(e in 1..nteams)(
   minKilometres[e] = sum(d in 2..ndays)(
                         let {
                           var 1..nstadiums: d1_estadium;
                           var 1..nstadiums: d2_estadium;
                           constraint exists(e2d1 in 1..nteams) (e!=e2d1 /\ teamVsTeam[max(e, e2d1),min(e, e2d1)].1==(d-1) /\ teamVsTeam[max(e, e2d1),min(e, e2d1)].2==d1_estadium);
-		                      constraint exists(e2d2 in 1..nteams) (e!=e2d2 /\ teamVsTeam[max(e, e2d2),min(e, e2d2)].1==(d) /\ teamVsTeam[max(e, e2d2),min(e, e2d2)].2==d2_estadium);
+                      constraint exists(e2d2 in 1..nteams) (e!=e2d2 /\ teamVsTeam[max(e, e2d2),min(e, e2d2)].1==(d) /\ teamVsTeam[max(e, e2d2),min(e, e2d2)].2==d2_estadium);
                         } in
                         distancies[d1_estadium, d2_estadium])
                      );
+
 %Minimitzem els seguidors que es queden fora
-%solve minimize(seguidorsFora);
+solve minimize(seguidorsFora);
 
 %Minimi els kilometres que faran els seguidors
-solve minimize(sum(minKilometres));
+%solve minimize(sum(minKilometres));
 %solve minimize(sum(minKilometres)+3*(max(minKilometres) - min(minKilometres)));
 
 %Minimitzem tant els kilometres que faran els seguidors com els seguidors que es queden fora
